@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace LinqTest
 {
-    class TaskAssignment
+    public class TaskAssignment
     {
         public Guid Id { get; init; }
         public Guid ParentID { get; init; }
         public string Name { get; set; }
-
-        
     }
 }
