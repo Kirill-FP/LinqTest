@@ -19,7 +19,6 @@ namespace LinqTest
                 .ThenByDescending(_ => _.Name.Length)
                 .TakeLast(10)
                 .Select(_ => (_.Id, _.Name));
-            
         }
 //1. вычислить количество Late тасков
         public static int GetLateTasksCountLINQ(this IEnumerable<ProjectTask> projectTasksIEnumerable)
