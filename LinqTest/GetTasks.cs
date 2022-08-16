@@ -10,7 +10,7 @@ namespace LinqTest
     {
         //0. получить последние 10 тасков расположеных в алфавитном порядке
         //и вывести в виде именовоного tuple значения Ид и имени
-        public static IEnumerable<(Guid Id, string Name)>? Get10LatestTasks (IEnumerable<ProjectTask> projectTasksIEnumerable)
+        public static IEnumerable<(Guid Id, string Name)>? Get10LatestTasks (this IEnumerable<ProjectTask> projectTasksIEnumerable)
         {
             var projectTasks = projectTasksIEnumerable.ToList();
             int projectTasksCount = projectTasks.Count;
@@ -32,34 +32,78 @@ namespace LinqTest
             }
             return projectTasksCount == 0 ? null : result;
         }
-
-        public static List<ProjectTask> GenerateRandomAmountOfTestData(int tasksMaxNumberToCreate, int assignmentsMaxNumberToCreate)
+        //1. вычислить количество Late тасков
+        public static int GetLateTasksCount(this IEnumerable<ProjectTask> projectTasksIEnumerable)
         {
-            Guid id;
-            int tasksNumberToCreate = new Random().Next(tasksMaxNumberToCreate / 2) + tasksMaxNumberToCreate / 2;
-            var projectTasks = new List<ProjectTask>();
-            for (int i = 0; i < tasksNumberToCreate; i++)
+            var projectTasks = projectTasksIEnumerable.ToList();
+            var DateTimeNow = DateTime.Now;
+            int LateTasksCount = 0;
+             for(int i = 0; i < projectTasks.Count; i++)
             {
-                id = Guid.NewGuid();
-                int assignmentsNumberToCreate = new Random().Next(assignmentsMaxNumberToCreate / 2) + assignmentsMaxNumberToCreate / 2;
-                var currentTaskAssignments = new List<TaskAssignment>();
-                for (int j = 0; j < assignmentsNumberToCreate; j++)
+                if (projectTasks[i].FinishDate < DateTimeNow)
+                    LateTasksCount++;
+            }
+            return LateTasksCount;
+        }
+        // 2. вычислить Late тaск который начался раньше всех
+        public static ProjectTask? GetLateTaskWithTheEarliestStartDate(this IEnumerable<ProjectTask> projectTasksIEnumerable)
+        {
+            var dateTimeNow = DateTime.Now;
+            var theEarliestStartDate = DateTime.MaxValue;
+            var projectTasks = projectTasksIEnumerable.ToList();
+            ProjectTask? result = null;
+            for (int i = 0; i < projectTasks.Count; i++)
+            {
+                if (dateTimeNow > projectTasks[i].FinishDate)
+                    if (projectTasks[i].StartDate != null)
+                        if (theEarliestStartDate > projectTasks[i].StartDate)
+                        {
+#pragma warning disable CS8629 // Nullable value type may be null. Та всё будет хорошо, вот же проверка на null чуть выше
+                            theEarliestStartDate = (DateTime)projectTasks[i].StartDate;
+#pragma warning restore CS8629 // Nullable value type may be null.
+                            result = projectTasks[i];
+                        }
+            }
+            return result;
+        }
+        //3. вычислитиь список пользователей на которых заасайнены таски
+        public static List<Resource> GetResourcesWhoHaveAssignmentsToTasks(this IEnumerable<ProjectTask> projectTasksIEnumerable)
+        {
+            var result = new List<Resource>();
+            foreach (var task in projectTasksIEnumerable)
+            {
+                foreach (var assignment in task.Assignments)
                 {
-                    currentTaskAssignments.Add(
-                        new TaskAssignment { Id = Guid.NewGuid(), ParentID = id, Name = $"Task{i}, Assignment{j}" });
+                    if (assignment.AssignedResource != null)
+                        if(result.Contains(assignment.AssignedResource) == false)
+                            result.Add(assignment.AssignedResource);
                 }
-                var currentTask = new ProjectTask()
+            }
+            for (int i = 0; i < result.Count; i++)
+                for (int j = i + 1; j < result.Count; j++)
+                    if (String.Compare(result[i].Name, result[j].Name) > 0)
+                        (result[i].Name, result[j].Name) = (result[j].Name, result[i].Name);
+            return result;
+        }
+        // 4. вычислить сколько тасков имеет каждый юзер
+        public static IEnumerable<(Resource, int)> GetNubmerOfTasksForEachResource(this IEnumerable<ProjectTask> projectTaskIEnumerable)
+        {
+            var resources = projectTaskIEnumerable.GetResourcesWhoHaveAssignmentsToTasks();
+            var result = new List<(Resource, int)>();
+            foreach(var resource in resources)
+            {
+                int assignmentsCount = 0;
+                foreach (var task in projectTaskIEnumerable)
                 {
-                    Id = id,
-                    Name = $"Task{i}",
-                    StartDate = DateTime.Now,
-                    FinishDate = DateTime.Now.AddDays((int)new Random().Next(10)),
-                    StoryPoints = 5,
-                    Assignments = currentTaskAssignments
-                };
-                projectTasks.Add(currentTask);
-            };
-            return projectTasks;
+                    foreach(var assignment in task.Assignments)
+                    {
+                        if(assignment.AssignedResource.Equals(resource))
+                            assignmentsCount++;
+                    }
+                }
+                result.Add((resource, assignmentsCount));
+            }
+            return result;
         }
     }
 }

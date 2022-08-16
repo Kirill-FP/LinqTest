@@ -11,5 +11,6 @@ namespace LinqTest
         public Guid Id { get; init; }
         public Guid ParentID { get; init; }
         public string Name { get; set; }
+        public Resource AssignedResource { get; set; }
     }
 }
