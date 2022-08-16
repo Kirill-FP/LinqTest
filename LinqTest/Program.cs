@@ -4,9 +4,9 @@ public class Program
 {
     static void Main(string[] args)
     {
-        //Generate up to 40 tasks with up to 10 assignments for each
+//Generate up to 40 tasks with up to 10 assignments for each and a Resource Pool of 10 Resources
         var projectTasks = new List<ProjectTask>();
-            projectTasks = GenerateTestData.GenerateRandomAmountOfTestData(40, 10, 10);
+        projectTasks = GenerateTestData.GenerateRandomAmountOfTestData(40, 10, 10);
         Console.WriteLine("****Data*****");
         Console.WriteLine($"projectTasks.Count: {projectTasks.Count}");
         Console.WriteLine();
